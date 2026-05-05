@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import streams
+from . import streams, testing
 from .blocks import Jinja2BlockRenderer
 from .deps import TurboContext, turbo_context
 from .protocols import BlockRenderer, SessionLike, TemplateRenderer
@@ -16,5 +16,6 @@ __all__ = [
     "TurboContext",
     "TurboStreamResponse",
     "streams",
+    "testing",
     "turbo_context",
 ]
