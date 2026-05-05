@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>fastapi-hotwire minimal demo</title>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.js"
+    ></script>
+  </head>
+  <body>
+    <h1>Todos</h1>
+
+    <form action="/todos" method="post">
+      <input name="text" required />
+      <button type="submit">Add</button>
+    </form>
+
+    <ul id="todos">
+      {% for todo in todos %} {% block todo_row scoped %}
+      <li id="todo-{{ todo.id }}">
+        {{ todo.text }}
+        <form action="/todos/{{ todo.id }}/delete" method="post" style="display: inline">
+          <button type="submit">x</button>
+        </form>
+      </li>
+      {% endblock %} {% endfor %}
+    </ul>
+  </body>
+</html>
