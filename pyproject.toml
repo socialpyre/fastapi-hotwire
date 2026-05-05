@@ -30,7 +30,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
-dependencies = []
+dependencies = [
+    "fastapi>=0.110",
+    "markupsafe>=2.1",
+]
 
 [dependency-groups]
 dev = [
