@@ -100,7 +100,6 @@ The release workflow pushes a `chore(release): X.Y.Z [skip ci]` commit and a `vX
 | --- | --- |
 | Disallow force push | Prevents history rewrites; protects against accidental rebase-on-main |
 | Disallow deletion | Prevents the branch being deleted from the UI |
-| Require signed commits | Provenance — every commit on `main` is GPG/SSH-signed by either the maintainer or GitHub's bot identity |
 | Require linear history | Keeps `git log` readable; matches semantic-release's single-commit release pattern |
 
 Apply via the GitHub UI (Settings → Branches → Add rule) or via `gh api`:
@@ -114,9 +113,10 @@ gh api -X PUT repos/socialpyre/fastapi-hotwire/branches/main/protection \
   -f restrictions=null \
   -F allow_force_pushes=false \
   -F allow_deletions=false \
-  -F required_linear_history=true \
-  -F required_signatures=true
+  -F required_linear_history=true
 ```
+
+Signed commits are **not** required because `python-semantic-release`'s release commit is pushed by the GitHub Actions runner without GPG/SSH signing. Adding signed-commit infrastructure for the bot is a worthwhile follow-up (configure a signing key as a repo secret and have the workflow import it), but is deliberately out of the current baseline.
 
 If you ever want to require status checks on direct pushes to `main` too, switch from "Branch protection rules" to "Rulesets" — they apply to all pushes, not just PRs.
 
