@@ -6,7 +6,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
-authors = [{ name = "Dane Thurber" }]
+authors = [{ name = "Pyre" }]
 keywords = [
     "fastapi",
     "hotwire",
