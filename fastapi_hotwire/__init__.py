@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import streams, testing
+from . import csrf, streams, testing
 from .blocks import Jinja2BlockRenderer
 from .deps import TurboContext, turbo_context
 from .flash import FlashMessage, flash, get_flashed
@@ -19,6 +19,7 @@ __all__ = [
     "TemplateRenderer",
     "TurboContext",
     "TurboStreamResponse",
+    "csrf",
     "flash",
     "get_flashed",
     "streams",
