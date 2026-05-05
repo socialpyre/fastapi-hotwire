@@ -36,6 +36,9 @@ dependencies = [
     "markupsafe>=2.1",
 ]
 
+[project.optional-dependencies]
+forms = ["pydantic>=2.0"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.3",
