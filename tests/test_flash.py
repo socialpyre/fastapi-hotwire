@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
@@ -124,10 +126,6 @@ def test_flash_without_session_middleware_is_clear_error():
 
 
 def test_flash_message_dataclass_is_frozen():
-    from dataclasses import FrozenInstanceError
-
     msg = FlashMessage(text="x")
-    # ``setattr`` bypasses static type checks; the runtime guard from
-    # ``frozen=True`` is what we're verifying here.
     with pytest.raises(FrozenInstanceError):
         setattr(msg, "text", "y")  # noqa: B010 - direct assignment fails type check
