@@ -50,7 +50,9 @@ def test_parse_streams_single_action():
         return TurboStreamResponse(streams.append("<li>hi</li>", target="list"))
 
     actions = parse_streams(TestClient(app).get("/"))
-    assert actions == [StreamAction("append", "list", None, "<li>hi</li>")]
+    assert actions == [
+        StreamAction(action="append", content="<li>hi</li>", target="list", targets=None)
+    ]
 
 
 def test_parse_streams_multiple_actions():

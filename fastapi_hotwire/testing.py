@@ -42,9 +42,9 @@ class StreamAction:
     """One ``<turbo-stream>`` element parsed out of a response body."""
 
     action: str
+    content: str
     target: str | None
     targets: str | None
-    content: str
 
 
 def _body_text(response: Any) -> str:
@@ -88,9 +88,9 @@ def parse_streams(response: Any) -> list[StreamAction]:
         actions.append(
             StreamAction(
                 action=attrs.get("action", ""),
+                content=match.group("content") or "",
                 target=attrs.get("target"),
                 targets=attrs.get("targets"),
-                content=match.group("content") or "",
             )
         )
     return actions

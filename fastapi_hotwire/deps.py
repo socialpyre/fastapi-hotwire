@@ -30,9 +30,9 @@ class TurboContext:
             navigations.
     """
 
-    is_frame: bool
-    frame_id: str | None
     accepts_stream: bool
+    frame_id: str | None
+    is_frame: bool
     is_visit: bool
 
 
@@ -54,8 +54,8 @@ async def turbo_context(request: Request) -> TurboContext:
     accept = request.headers.get("accept", "")
     sec_fetch_mode = request.headers.get("sec-fetch-mode", "")
     return TurboContext(
-        is_frame=frame_id is not None,
-        frame_id=frame_id,
         accepts_stream=_STREAM_MEDIA_TYPE in accept,
+        frame_id=frame_id,
+        is_frame=frame_id is not None,
         is_visit=frame_id is None and sec_fetch_mode == "navigate",
     )
