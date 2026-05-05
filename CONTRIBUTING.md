@@ -75,3 +75,94 @@ Releases are fully automated. A push to `main` runs `python-semantic-release`, w
 4. Creates a GitHub Release with the generated changelog entry.
 
 If a push has only `chore:` / `docs:` / `ci:` / `test:` / `refactor:` commits, no release is cut. That's intentional.
+
+## Repo configuration (maintainer setup)
+
+This section is a one-time runbook for whoever provisions the public GitHub repo. Contributors don't need to read it. The configuration here is what was applied to `socialpyre/fastapi-hotwire` and is a sensible default for future Pyre OSS projects.
+
+All steps assume you have `gh` authenticated against an account with admin on the repo.
+
+### 1. Repo metadata
+
+| What | Why | How |
+| --- | --- | --- |
+| Description | One-sentence summary that surfaces in GitHub search and the repo card | `gh repo edit socialpyre/fastapi-hotwire --description "..."` |
+| Homepage URL | Sends visitors to PyPI for install instructions | `gh repo edit socialpyre/fastapi-hotwire --homepage "https://pypi.org/project/fastapi-hotwire/"` |
+| Topics | Discoverability — GitHub topic pages and search filters | `gh repo edit socialpyre/fastapi-hotwire --add-topic fastapi --add-topic hotwire --add-topic turbo --add-topic python --add-topic jinja2 --add-topic server-rendered --add-topic stimulus --add-topic web-framework` |
+| Disable Wiki | Unused; Wiki collects spam if left open | `gh repo edit socialpyre/fastapi-hotwire --enable-wiki=false` |
+| Disable Projects | Unused | `gh repo edit socialpyre/fastapi-hotwire --enable-projects=false` |
+
+### 2. Branch protection on `main`
+
+The release workflow pushes a `chore(release): X.Y.Z [skip ci]` commit and a `vX.Y.Z` tag directly to `main`. **Requiring PRs would break that flow.** The baseline below protects history without blocking the bot.
+
+| Rule | Effect |
+| --- | --- |
+| Disallow force push | Prevents history rewrites; protects against accidental rebase-on-main |
+| Disallow deletion | Prevents the branch being deleted from the UI |
+| Require signed commits | Provenance — every commit on `main` is GPG/SSH-signed by either the maintainer or GitHub's bot identity |
+| Require linear history | Keeps `git log` readable; matches semantic-release's single-commit release pattern |
+
+Apply via the GitHub UI (Settings → Branches → Add rule) or via `gh api`:
+
+```bash
+gh api -X PUT repos/socialpyre/fastapi-hotwire/branches/main/protection \
+  -H "Accept: application/vnd.github+json" \
+  -f required_status_checks=null \
+  -f enforce_admins=false \
+  -f required_pull_request_reviews=null \
+  -f restrictions=null \
+  -F allow_force_pushes=false \
+  -F allow_deletions=false \
+  -F required_linear_history=true \
+  -F required_signatures=true
+```
+
+If you ever want to require status checks on direct pushes to `main` too, switch from "Branch protection rules" to "Rulesets" — they apply to all pushes, not just PRs.
+
+### 3. Security and supply chain
+
+In **Settings → Code security**, enable:
+
+- **Dependabot version updates** — already configured via `.github/dependabot.yml` (weekly pip + github-actions). Toggling this on is what activates the schedule.
+- **Dependabot security updates** — auto-PRs for known vulnerable deps.
+- **Secret scanning** + **Push protection** — blocks commits that contain credential-shaped tokens.
+- **Code scanning** — already configured via `.github/workflows/codeql.yml`. Toggling this on enables the Security tab to display findings.
+- **Private vulnerability reporting** — enables the "Report a vulnerability" form referenced in `SECURITY.md`.
+
+These are all UI toggles; there's no `gh` equivalent for some of them yet.
+
+### 4. GitHub Environments
+
+The release workflow targets a `pypi` environment so PyPI Trusted Publishing's OIDC handshake has a deployment-context to bind to.
+
+In **Settings → Environments → New environment**, create:
+
+| Name | Configuration |
+| --- | --- |
+| `pypi` | Deployment branches: **Selected branches** → `main` only. Required reviewers: optional (one for safety, zero for automation). |
+
+### 5. PyPI Trusted Publisher
+
+Confirm the publisher binding at https://pypi.org/manage/account/publishing/. The pending publisher must specify:
+
+| Field | Value |
+| --- | --- |
+| PyPI project | `fastapi-hotwire` |
+| Owner | `socialpyre` |
+| Repository | `fastapi-hotwire` |
+| Workflow | `release.yml` |
+| Environment | `pypi` |
+
+Once the first release runs, the pending publisher is converted to a real publisher and stays bound.
+
+### 6. Verification
+
+After all of the above:
+
+```bash
+gh repo view socialpyre/fastapi-hotwire --json description,homepageUrl,repositoryTopics,hasWikiEnabled,hasProjectsEnabled
+gh api repos/socialpyre/fastapi-hotwire/branches/main/protection --jq '{linear: .required_linear_history.enabled, signed: .required_signatures.enabled, force: .allow_force_pushes.enabled, delete: .allow_deletions.enabled}'
+```
+
+Both should return the configured values without error.
