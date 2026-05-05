@@ -4,7 +4,7 @@ Hotwire ([Turbo](https://turbo.hotwired.dev/)) integration for FastAPI — turbo
 
 [![PyPI version](https://img.shields.io/pypi/v/fastapi-hotwire.svg)](https://pypi.org/project/fastapi-hotwire/)
 [![Python versions](https://img.shields.io/pypi/pyversions/fastapi-hotwire.svg)](https://pypi.org/project/fastapi-hotwire/)
-[![CI](https://github.com/danethurber/fastapi-hotwire/actions/workflows/ci.yml/badge.svg)](https://github.com/danethurber/fastapi-hotwire/actions/workflows/ci.yml)
+[![CI](https://github.com/socialpyre/fastapi-hotwire/actions/workflows/ci.yml/badge.svg)](https://github.com/socialpyre/fastapi-hotwire/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 `fastapi-hotwire` is to FastAPI what [`turbo-flask`](https://github.com/miguelgrinberg/turbo-flask) is to Flask: a small, focused library for building server-rendered apps with Hotwire, without giving up FastAPI's async/dependency-injection story or pulling in a SPA framework.

@@ -7,7 +7,7 @@ Thanks for thinking about contributing! Issues and PRs are welcome — please fi
 You'll need [`uv`](https://docs.astral.sh/uv/) installed.
 
 ```bash
-git clone https://github.com/danethurber/fastapi-hotwire.git
+git clone https://github.com/socialpyre/fastapi-hotwire.git
 cd fastapi-hotwire
 uv sync --all-extras --group dev
 uv run pytest

@@ -50,10 +50,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/danethurber/fastapi-hotwire"
-Source = "https://github.com/danethurber/fastapi-hotwire"
-Issues = "https://github.com/danethurber/fastapi-hotwire/issues"
-Changelog = "https://github.com/danethurber/fastapi-hotwire/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/socialpyre/fastapi-hotwire"
+Source = "https://github.com/socialpyre/fastapi-hotwire"
+Issues = "https://github.com/socialpyre/fastapi-hotwire/issues"
+Changelog = "https://github.com/socialpyre/fastapi-hotwire/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]

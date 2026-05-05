@@ -17,7 +17,7 @@ labels: enhancement
 
 ## Scope check
 
-This library is intentionally small. Before opening, please confirm the request doesn't conflict with the [Non-goals](https://github.com/danethurber/fastapi-hotwire#non-goals) list:
+This library is intentionally small. Before opening, please confirm the request doesn't conflict with the [Non-goals](https://github.com/socialpyre/fastapi-hotwire#non-goals) list:
 
 - [ ] Not WebSocket / SSE push
 - [ ] Not logging / observability / tracing

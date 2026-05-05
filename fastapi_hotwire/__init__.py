@@ -11,7 +11,7 @@ Public API:
 - :mod:`csrf` — origin-check dependency factory.
 - :mod:`testing` — pytest assertions and request helpers for Hotwire endpoints.
 
-See https://github.com/danethurber/fastapi-hotwire for the quickstart.
+See https://github.com/socialpyre/fastapi-hotwire for the quickstart.
 """
 
 from __future__ import annotations
