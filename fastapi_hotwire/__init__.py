@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from . import streams
 from .protocols import BlockRenderer, SessionLike, TemplateRenderer
 from .responses import TurboStreamResponse
 
@@ -10,4 +11,5 @@ __all__ = [
     "SessionLike",
     "TemplateRenderer",
     "TurboStreamResponse",
+    "streams",
 ]
