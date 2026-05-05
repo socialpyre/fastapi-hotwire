@@ -1,12 +1,13 @@
 """pytest helpers for asserting on Hotwire responses.
 
-The parser uses regex against ``<turbo-stream>`` markup that this
-package generates — it doesn't try to be a general-purpose HTML parser.
-For frame-presence checks it uses a similarly narrow regex on
+The parser uses a narrow regex against ``<turbo-stream>`` markup that
+this package generates — it is not a general-purpose HTML parser. The
+frame-presence check uses a similarly narrow regex on
 ``<turbo-frame id="…">``.
 
-These helpers work with both ``starlette.responses.Response`` (e.g.
-the result of ``TestClient.get(...)``) and ``httpx.Response``.
+Helpers accept any object with the duck-typed shape of
+``starlette.responses.Response`` or ``httpx.Response`` (a ``text``
+attribute or a ``body`` attribute, plus a ``headers`` mapping).
 """
 
 from __future__ import annotations
@@ -24,7 +25,6 @@ __all__ = [
     "turbo_frame_request",
     "turbo_stream_request",
 ]
-
 
 _STREAM_MEDIA_TYPE = "text/vnd.turbo-stream.html"
 
@@ -47,27 +47,19 @@ class StreamAction:
     targets: str | None
 
 
-def _body_text(response: Any) -> str:
-    text = getattr(response, "text", None)
-    if text is not None:
-        return text
-    body = getattr(response, "body", None)
-    if isinstance(body, (bytes, bytearray)):
-        return body.decode("utf-8")
-    if isinstance(body, str):
-        return body
-    raise TypeError(f"cannot read body from {response!r}")
-
-
-def _content_type(response: Any) -> str:
-    headers = getattr(response, "headers", {})
-    if isinstance(headers, Mapping):
-        return str(headers.get("content-type") or headers.get("Content-Type") or "")
-    return ""
+def assert_turbo_frame(response: Any, *, frame_id: str) -> None:
+    """Assert that the response body contains ``<turbo-frame id="frame_id">``."""
+    body = _body_text(response)
+    pattern = re.compile(
+        rf'<turbo-frame\b[^>]*\bid="{re.escape(frame_id)}"',
+        re.DOTALL,
+    )
+    if not pattern.search(body):
+        raise AssertionError(f'no <turbo-frame id="{frame_id}"> found in response body')
 
 
 def assert_turbo_stream(response: Any) -> None:
-    """Assert that ``response`` is a Turbo Stream (correct media type)."""
+    """Assert that ``response`` carries the Turbo Stream media type."""
     ct = _content_type(response)
     if not ct.startswith(_STREAM_MEDIA_TYPE):
         raise AssertionError(
@@ -96,21 +88,10 @@ def parse_streams(response: Any) -> list[StreamAction]:
     return actions
 
 
-def assert_turbo_frame(response: Any, *, frame_id: str) -> None:
-    """Assert that the response body contains ``<turbo-frame id="frame_id">``."""
-    body = _body_text(response)
-    pattern = re.compile(
-        rf'<turbo-frame\b[^>]*\bid="{re.escape(frame_id)}"',
-        re.DOTALL,
-    )
-    if not pattern.search(body):
-        raise AssertionError(f'no <turbo-frame id="{frame_id}"> found in response body')
-
-
 def turbo_frame_request(
     client: Any, url: str, frame_id: str, *, method: str = "GET", **kwargs: Any
 ) -> Any:
-    """Issue ``client.request(method, url, ...)`` with a ``Turbo-Frame`` header."""
+    """Issue a request with a ``Turbo-Frame`` header set."""
     headers = dict(kwargs.pop("headers", {}) or {})
     headers["Turbo-Frame"] = frame_id
     return client.request(method, url, headers=headers, **kwargs)
@@ -125,3 +106,22 @@ def turbo_stream_request(client: Any, url: str, *, method: str = "POST", **kwarg
             f"{existing}, {_STREAM_MEDIA_TYPE}".lstrip(", ") if existing else _STREAM_MEDIA_TYPE
         )
     return client.request(method, url, headers=headers, **kwargs)
+
+
+def _body_text(response: Any) -> str:
+    text = getattr(response, "text", None)
+    if text is not None:
+        return text
+    body = getattr(response, "body", None)
+    if isinstance(body, (bytes, bytearray)):
+        return body.decode("utf-8")
+    if isinstance(body, str):
+        return body
+    raise TypeError(f"cannot read body from {response!r}")
+
+
+def _content_type(response: Any) -> str:
+    headers = getattr(response, "headers", {})
+    if isinstance(headers, Mapping):
+        return str(headers.get("content-type") or headers.get("Content-Type") or "")
+    return ""

@@ -1,41 +1,20 @@
-"""Form helpers: HMAC time-trap token and Pydantic ``ValidationError`` to stream.
+"""Form helpers: HMAC time-trap token and Pydantic validation-error stream.
 
-The time-trap token is a small, server-signed timestamp embedded as a
-hidden form field. ``verify_form_token`` rejects submissions that arrive
-implausibly fast (a bot that scrapes and submits in <``min_age``
-seconds) or implausibly stale (a page that sat idle past ``max_age``).
+The time-trap token is a server-signed timestamp embedded as a hidden
+form field. :func:`verify_form_token` rejects submissions that arrive
+implausibly fast (a bot scraping and submitting in <``min_age`` seconds)
+or stale (a page that sat past ``max_age``).
 
-``validation_error_stream`` turns a Pydantic ``ValidationError`` into a
-turbo-stream that replaces only the form's block — no full-page reload,
-no scroll loss, no flash-of-unstyled.
+:func:`validation_error_stream` turns a Pydantic ``ValidationError`` into
+a turbo-stream that replaces only the form's block — no full-page
+reload, no scroll loss.
 
-SECURITY — what the form-token IS and ISN'T
--------------------------------------------
-
-The token is sized as an **anti-bot tripwire**:
-
-- HMAC-SHA256 truncated to 64 bits (16 hex chars) — adequate against
-  online brute-force when the validating endpoint sits behind a CDN /
-  rate-limiter, NOT adequate as a long-lived auth artifact.
-- No per-user, per-form, or per-IP binding — a token minted for one
-  form works against any other form on the same site within the
-  ``[min_age, max_age]`` window. The pairing with Origin/Referer
-  checks (see :mod:`fastapi_hotwire.csrf`) is what makes this a
-  defensible CSRF posture for low-stakes forms.
-- The signing key is a single secret, rotated as a unit. Rotating it
-  invalidates every in-flight token — fine for marketing forms,
-  problematic if you reused this primitive for password reset.
-
-**Do not reuse** ``make_form_token`` / ``verify_form_token`` for:
-
-- Password-reset / magic-link tokens — use a 256-bit token bound to a
-  user id and stored server-side.
-- Session tokens — use a real session middleware.
-- Anti-CSRF for state-changing endpoints in authenticated apps — bind
-  to user + form + nonce, not just time.
-
-Use it as documented (anti-spam tripwire on public forms) and the
-properties are sufficient.
+The form token is sized as an **anti-bot tripwire**, not a long-lived
+auth artifact: HMAC-SHA256 truncated to 64 bits, no per-user binding,
+single rotation key. Pair with :mod:`fastapi_hotwire.csrf` for
+state-changing endpoints. Do **not** reuse for password-reset tokens,
+session tokens, or authenticated-CSRF — use a 256-bit, server-stored,
+user-bound primitive for those.
 """
 
 from __future__ import annotations
@@ -62,60 +41,20 @@ __all__ = [
     "verify_form_token",
 ]
 
-
-# Defaults — tuned for human form-fill speeds. Override via kwargs if
-# your form has typing assistance or read-only views that legitimately
-# submit faster, or if some surface needs a longer max age.
 DEFAULT_MIN_AGE_SECONDS = 3
 DEFAULT_MAX_AGE_SECONDS = 3600
-
-
-def _sign(message: str, secret: str) -> str:
-    return hmac.new(
-        secret.encode("utf-8"),
-        message.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()[:16]
 
 
 def make_form_token(secret: str, *, now: int | None = None) -> str:
     """Return an HMAC-signed timestamp suitable for a hidden form field.
 
     Embed in the form and check on submit with :func:`verify_form_token`.
-    The token has no per-user binding — it's a tripwire against bots,
-    not a CSRF token.
+    No per-user binding — this is a tripwire against bots, not a CSRF
+    token.
     """
     issued_at = int(time.time()) if now is None else now
     payload = str(issued_at)
     return f"{payload}.{_sign(payload, secret)}"
-
-
-def verify_form_token(
-    token: str,
-    secret: str,
-    *,
-    min_age: int = DEFAULT_MIN_AGE_SECONDS,
-    max_age: int = DEFAULT_MAX_AGE_SECONDS,
-    now: int | None = None,
-) -> bool:
-    """Return True iff ``token`` is well-formed, validly signed, and within bounds.
-
-    A bot that scrapes and submits in <``min_age`` seconds fails; a
-    stale token (page sat for >``max_age`` seconds) also fails. Constant-
-    time signature comparison.
-    """
-    if not token or "." not in token:
-        return False
-    payload, sig = token.rsplit(".", 1)
-    expected = _sign(payload, secret)
-    if not hmac.compare_digest(sig, expected):
-        return False
-    try:
-        issued_at = int(payload)
-    except ValueError:
-        return False
-    elapsed = (int(time.time()) if now is None else now) - issued_at
-    return min_age <= elapsed <= max_age
 
 
 def validation_error_stream(
@@ -136,19 +75,15 @@ def validation_error_stream(
     The rendered template receives:
 
     - ``errors``: a ``{field_name: human_message}`` mapping (built by
-      ``error_formatter`` if given, otherwise a minimal default that
-      uses Pydantic's own messages).
+      ``error_formatter`` if given, otherwise Pydantic's own messages).
     - ``form_data``: a ``{field_name: value}`` mapping. Pass the raw
-      submitted form dict explicitly to round-trip *all* input back
-      to the user (including fields that validated cleanly). When
-      omitted, falls back to a best-effort extraction from the
-      exception, which only contains values for fields that failed
-      validation.
-    - Plus anything you pass in ``extra_context``.
+      submitted form dict to round-trip *all* input back to the user;
+      omit to fall back to a best-effort extraction from the exception
+      (only the values that failed validation).
+    - Anything in ``extra_context``.
 
-    Returns ``status_code=422`` to mirror REST validation semantics
-    without breaking Hotwire's HTTP-status handling — Turbo applies
-    streams on any 2xx/4xx response with the right content-type.
+    Returns ``status_code=422`` — Turbo applies streams on any 2xx/4xx
+    response with the right content-type.
     """
     formatter = error_formatter or _default_errors
     errors = formatter(exc)
@@ -161,6 +96,32 @@ def validation_error_stream(
     body = templates.render_block_string(request, template, block, **context)
     stream = _stream(action, target=target, targets=None, html=body)
     return TurboStreamResponse(stream, status_code=422)
+
+
+def verify_form_token(
+    token: str,
+    secret: str,
+    *,
+    min_age: int = DEFAULT_MIN_AGE_SECONDS,
+    max_age: int = DEFAULT_MAX_AGE_SECONDS,
+    now: int | None = None,
+) -> bool:
+    """Return True iff ``token`` is well-formed, validly signed, and within bounds.
+
+    Constant-time signature comparison; rejects both fresh-too-fast and
+    stale timestamps.
+    """
+    if not token or "." not in token:
+        return False
+    payload, sig = token.rsplit(".", 1)
+    if not hmac.compare_digest(sig, _sign(payload, secret)):
+        return False
+    try:
+        issued_at = int(payload)
+    except ValueError:
+        return False
+    elapsed = (int(time.time()) if now is None else now) - issued_at
+    return min_age <= elapsed <= max_age
 
 
 def _default_errors(exc: ValidationError) -> dict[str, str]:
@@ -181,3 +142,11 @@ def _form_data_from_validation_error(exc: ValidationError) -> dict[str, Any]:
             continue
         out[str(loc[0])] = err.get("input")
     return out
+
+
+def _sign(message: str, secret: str) -> str:
+    return hmac.new(
+        secret.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()[:16]

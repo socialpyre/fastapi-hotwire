@@ -1,42 +1,13 @@
 """Session-backed flash messages with a Hotwire-native turbo-stream variant.
 
-This module is deliberately decoupled from any specific session
-middleware. It only requires that ``request.session`` exist and behave
-like a ``MutableMapping[str, Any]`` — ``starlette.middleware.sessions
-.SessionMiddleware`` provides this; ``starsessions`` and other
-compatible middleware do too.
+Decoupled from any specific session middleware. Requires only that
+``request.session`` exist and behave like a ``MutableMapping[str, Any]``
+— Starlette's ``SessionMiddleware``, ``starsessions``, and other
+compatible middlewares all qualify.
 
-Flash semantics:
-
-- :func:`flash` appends a message to ``request.session["_flash"]``.
-- :func:`get_flashed` reads + clears the queue in one call.
-- :func:`flashes_context_processor` is registered automatically by
-  :class:`~fastapi_hotwire.templates.HotwireTemplates` so any rendered
-  template sees a ``flashes`` variable populated with the latest queue.
-- :func:`flash.stream` turns a flash into a turbo-stream response that
-  appends the rendered partial to a target region — useful for
-  Hotwire-aware flows that don't redirect.
-
-SECURITY — flash content trust contract
----------------------------------------
-
-Flash messages ride in the user's session cookie. Starlette's
-``SessionMiddleware`` (and most compatible middlewares) **sign** the
-cookie but do **not encrypt** it. The cookie is base64-encoded JSON
-that any user can decode locally.
-
-Therefore:
-
-- **Do not put PII or secrets in flash messages.** Anything you queue
-  is readable by the recipient (and by anyone with access to their
-  cookie jar).
-- **Keep flash text server-supplied, not user-controlled.** A pattern
-  like ``flash(request, f"Welcome {user.email}!")`` is fine for the
-  user themselves but means their email rides in their own cookie —
-  acceptable only if you've already accepted that trade-off.
-- **Avoid templating user input into flash text** — it's interpolated
-  into HTML at render time, and while the built-in template uses
-  :func:`markupsafe.escape`, custom flash partials may not.
+Flash content rides in the user's signed-but-not-encrypted session
+cookie. **Do not** put PII or secrets in flash messages. Keep flash
+text server-supplied; user input must be escaped before templating.
 """
 
 from __future__ import annotations
@@ -56,8 +27,8 @@ __all__ = [
     "flash",
     "flashes_context_processor",
     "get_flashed",
+    "render_flashes_html",
 ]
-
 
 _SESSION_KEY = "_flash"
 
@@ -71,48 +42,13 @@ class FlashMessage:
     category: str = "info"
 
 
-def _require_session(request: Request) -> dict[str, Any]:
-    """Strict accessor — used by the write path. Raises ``RuntimeError``
-    with a clear setup message when ``SessionMiddleware`` (or compatible)
-    isn't installed."""
-    try:
-        return request.session  # type: ignore[no-any-return]
-    except AssertionError as exc:
-        # Starlette raises AssertionError when SessionMiddleware isn't
-        # installed — translate to something more useful.
-        raise RuntimeError(
-            "fastapi-hotwire flash requires a session: install "
-            "starlette.middleware.sessions.SessionMiddleware (or another "
-            "middleware that exposes request.session as a MutableMapping)."
-        ) from exc
+def flashes_context_processor(request: Request) -> dict[str, Any]:
+    """Templates context processor exposing ``flashes`` and clearing the queue.
 
-
-def _try_session(request: Request) -> dict[str, Any] | None:
-    """Tolerant accessor — used by read paths (``get_flashed``, the
-    ``flashes`` context processor). Returns ``None`` when the request
-    has no session, so reads silently degrade to "no flashes" instead
-    of crashing pages that don't actively use flash. The strict write
-    path (``flash()``) still surfaces a clear error if the user forgot
-    to install the middleware."""
-    try:
-        return request.session  # type: ignore[no-any-return]
-    except AssertionError:
-        return None
-
-
-def _enqueue(request: Request, text: str, category: str) -> None:
-    session = _require_session(request)
-    queue = session.get(_SESSION_KEY) or []
-    queue.append({"text": text, "category": category})
-    session[_SESSION_KEY] = queue
-
-
-def _drain(request: Request) -> list[FlashMessage]:
-    session = _try_session(request)
-    if session is None:
-        return []
-    raw = session.pop(_SESSION_KEY, None) or []
-    return [FlashMessage(**entry) for entry in raw]
+    Once invoked the queue is empty, so subsequent calls return ``[]``.
+    Templates that need the data more than once should bind it locally.
+    """
+    return {"flashes": _drain(request)}
 
 
 def get_flashed(request: Request) -> list[FlashMessage]:
@@ -120,14 +56,14 @@ def get_flashed(request: Request) -> list[FlashMessage]:
     return _drain(request)
 
 
-def flashes_context_processor(request: Request) -> dict[str, Any]:
-    """Templates context processor exposing ``flashes`` and clearing the queue.
+def render_flashes_html(request: Request) -> HTMLResponse:
+    """Drain pending flashes and return them as a plain ``HTMLResponse``.
 
-    Once invoked the queue is empty, so subsequent ``get_flashed`` calls
-    on the same request return ``[]``. Templates that need the data more
-    than once should bind it to a local variable.
+    Convenience for endpoints that want just the flash region. Most apps
+    will use the ``flashes`` context processor or :meth:`flash.stream`
+    instead.
     """
-    return {"flashes": _drain(request)}
+    return HTMLResponse(_builtin_flash_html(_drain(request)))
 
 
 def _builtin_flash_html(messages: list[FlashMessage]) -> Markup:
@@ -138,11 +74,26 @@ def _builtin_flash_html(messages: list[FlashMessage]) -> Markup:
     return Markup("".join(parts))
 
 
-class _FlashAPI:
-    """Implements ``flash(request, text)`` and ``flash.stream(request, text)``.
+def _drain(request: Request) -> list[FlashMessage]:
+    session = _try_session(request)
+    if session is None:
+        return []
+    raw = session.pop(_SESSION_KEY, None) or []
+    return [FlashMessage(**entry) for entry in raw]
 
-    Exposed as the module-level ``flash`` singleton so the API reads
-    naturally either way.
+
+def _enqueue(request: Request, text: str, category: str) -> None:
+    session = _require_session(request)
+    queue = session.get(_SESSION_KEY) or []
+    queue.append({"text": text, "category": category})
+    session[_SESSION_KEY] = queue
+
+
+class _FlashAPI:
+    """Implementation of the ``flash`` public singleton.
+
+    Exposed as a callable instance so the API reads naturally either as
+    ``flash(request, "Saved")`` or ``flash.stream(request, "Saved")``.
     """
 
     def __call__(self, request: Request, text: str, *, category: str = "info") -> None:
@@ -161,19 +112,15 @@ class _FlashAPI:
         templates: Any = None,
         include_pending: bool = True,
     ) -> TurboStreamResponse:
-        """Return a :class:`TurboStreamResponse` carrying this flash plus
-        any already-queued flashes.
+        """Return a Turbo Stream that delivers this flash without redirecting.
 
-        The stream's content is rendered either by ``templates.render_block``
-        (when both ``templates`` and ``template`` are passed; the block
-        named by ``template`` is rendered with a ``flashes`` context
-        variable), or by a built-in minimal partial as a fallback. The
-        built-in markup matches the ``flashes`` example partial in the
-        package docs.
+        ``include_pending`` (default ``True``) drains any flashes already
+        queued and combines them with this one so a single response
+        shows all messages.
 
-        ``include_pending`` (default True) drains any flashes already in
-        the session and combines them with this one — useful so a single
-        Hotwire response shows all messages, not just the most recent.
+        When ``templates`` and ``template`` are both provided, the named
+        template's ``flashes`` block is rendered with a ``flashes``
+        context variable. Otherwise a built-in minimal partial is used.
         """
         new = FlashMessage(text=text, category=category)
         messages: list[FlashMessage] = []
@@ -195,14 +142,24 @@ class _FlashAPI:
         return TurboStreamResponse(body)
 
 
+def _require_session(request: Request) -> dict[str, Any]:
+    """Strict accessor for the write path; raises with a clear setup message."""
+    try:
+        return request.session  # type: ignore[no-any-return]
+    except AssertionError as exc:
+        raise RuntimeError(
+            "fastapi-hotwire flash requires a session: install "
+            "starlette.middleware.sessions.SessionMiddleware (or another "
+            "middleware that exposes request.session as a MutableMapping)."
+        ) from exc
+
+
+def _try_session(request: Request) -> dict[str, Any] | None:
+    """Tolerant accessor for read paths; returns ``None`` when no session is installed."""
+    try:
+        return request.session  # type: ignore[no-any-return]
+    except AssertionError:
+        return None
+
+
 flash = _FlashAPI()
-
-
-def render_flashes_html(request: Request) -> HTMLResponse:
-    """Convenience for endpoints that want to return just the flash region.
-
-    Drains pending flashes and returns them as a plain ``HTMLResponse``
-    using the built-in minimal markup. Most apps won't need this; it's
-    here for completeness.
-    """
-    return HTMLResponse(_builtin_flash_html(_drain(request)))
