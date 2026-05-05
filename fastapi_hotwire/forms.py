@@ -108,18 +108,18 @@ def verify_form_token(
 ) -> bool:
     """Return True iff ``token`` is well-formed, validly signed, and within bounds.
 
-    Constant-time signature comparison; rejects both fresh-too-fast and
-    stale timestamps.
+    Constant-time signature comparison; rejects fresh-too-fast, stale,
+    and any non-canonical (signed, whitespace-padded, non-digit)
+    timestamps.
     """
     if not token or "." not in token:
         return False
     payload, sig = token.rsplit(".", 1)
     if not hmac.compare_digest(sig, _sign(payload, secret)):
         return False
-    try:
-        issued_at = int(payload)
-    except ValueError:
+    if not payload.isdigit():
         return False
+    issued_at = int(payload)
     elapsed = (int(time.time()) if now is None else now) - issued_at
     return min_age <= elapsed <= max_age
 

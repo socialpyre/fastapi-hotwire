@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 from pathlib import Path
 
 import pytest
@@ -19,6 +21,14 @@ from fastapi_hotwire.forms import (
 from fastapi_hotwire.testing import assert_turbo_stream, parse_streams
 
 SECRET = "test-secret"
+
+
+def _sign_for_test(payload: str) -> str:
+    return hmac.new(
+        SECRET.encode("utf-8"),
+        payload.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()[:16]
 
 
 class _Form(BaseModel):
@@ -52,6 +62,13 @@ def test_malformed_token_rejected():
     assert not verify_form_token("", SECRET)
     assert not verify_form_token("nodot", SECRET)
     assert not verify_form_token("notanint.deadbeefdeadbeef", SECRET)
+
+
+def test_non_canonical_timestamp_rejected():
+    """Signed payloads must be plain digits — no leading sign, no whitespace."""
+    for payload in ("+1000", "-1000", " 1000", "1000 ", "1_000"):
+        signed = f"{payload}.{_sign_for_test(payload)}"
+        assert not verify_form_token(signed, SECRET, now=1010)
 
 
 def test_token_uses_different_secret():
