@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+coverage.xml
+coverage.json
+junit.xml
+
+# Type checkers
+.mypy_cache/
+.pyright/
+.ty/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
