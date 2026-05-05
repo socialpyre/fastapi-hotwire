@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>fastapi-hotwire flash demo</title>
+    <script type="module">
+      import * as Turbo from "https://cdn.jsdelivr.net/npm/@hotwired/turbo@8/dist/turbo.es2017-esm.js";
+      import {
+        Application,
+        Controller,
+      } from "https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3/dist/stimulus.js";
+
+      const application = Application.start();
+
+      application.register(
+        "flash",
+        class extends Controller {
+          connect() {
+            this.timeout = setTimeout(() => this.element.remove(), 5000);
+            this.boundCleanup = () => this.element.remove();
+            document.addEventListener("turbo:before-cache", this.boundCleanup);
+          }
+          disconnect() {
+            clearTimeout(this.timeout);
+            document.removeEventListener("turbo:before-cache", this.boundCleanup);
+          }
+        }
+      );
+    </script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 540px;
+        margin: 2rem auto;
+      }
+      .flash {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+      }
+      .flash-success {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #34d399;
+      }
+      .flash-error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #f87171;
+      }
+      .flash-info {
+        background: #eff6ff;
+        color: #1e3a8a;
+        border: 1px solid #60a5fa;
+      }
+      button {
+        margin-right: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>flash demo</h1>
+
+    <div id="flash">
+      {% for msg in flashes %}
+      <div data-controller="flash" class="flash flash-{{ msg.category }}" role="status">
+        {{ msg.text }}
+      </div>
+      {% endfor %}
+    </div>
+
+    <p>Try each flow:</p>
+
+    <form action="/save-redirect" method="post" style="display: inline">
+      <button type="submit">Redirect flash</button>
+    </form>
+
+    <form action="/save-stream" method="post" style="display: inline">
+      <button type="submit">Stream success</button>
+    </form>
+
+    <form action="/error-stream" method="post" style="display: inline">
+      <button type="submit">Stream error</button>
+    </form>
+  </body>
+</html>
