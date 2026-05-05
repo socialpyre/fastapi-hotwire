@@ -9,6 +9,8 @@ Wildcards are honored **per DNS label** so ``https://*.cloudfront.net``
 matches ``https://dXXX.cloudfront.net`` but not
 ``https://evil.dXXX.cloudfront.net``. Each ``*`` consumes exactly one
 label; multi-label wildcards must be expressed as multiple patterns.
+Empty labels are significant — ``a..b`` does **not** match ``a.b``,
+and a trailing dot does not match a non-trailing-dot host.
 """
 
 from __future__ import annotations
@@ -65,7 +67,8 @@ def _origin_matches(candidate: str, pattern: str) -> bool:
 
     Comparison is case-insensitive on the host and case-sensitive on
     scheme. Ports must match exactly. Each ``*`` in the pattern host
-    consumes exactly one DNS label.
+    consumes exactly one DNS label, and empty labels are preserved so
+    ``a..b`` does not match ``a.b``.
     """
     c = urlparse(candidate)
     p = urlparse(pattern)
@@ -77,8 +80,8 @@ def _origin_matches(candidate: str, pattern: str) -> bool:
     if c_port != p_port:
         return False
 
-    c_labels = [label for label in c_host.lower().split(".") if label]
-    p_labels = [label for label in p_host.lower().split(".") if label]
+    c_labels = c_host.lower().split(".")
+    p_labels = p_host.lower().split(".")
     if len(c_labels) != len(p_labels):
         return False
     return all(

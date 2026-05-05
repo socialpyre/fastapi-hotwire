@@ -112,3 +112,17 @@ def test_host_match_is_case_insensitive():
     client = _app(csrf.allowed_origin("https://Example.COM"))
     resp = client.post("/submit", headers={"Origin": "https://example.com"})
     assert resp.status_code == 200
+
+
+def test_doubled_dot_does_not_match_single_dot():
+    """Empty labels must be significant — ``a..b`` is not ``a.b``."""
+    client = _app(csrf.allowed_origin("https://a.b"))
+    resp = client.post("/submit", headers={"Origin": "https://a..b"})
+    assert resp.status_code == 403
+
+
+def test_trailing_dot_does_not_match_non_trailing_dot():
+    """A trailing-dot FQDN has an extra empty label — must not match."""
+    client = _app(csrf.allowed_origin("https://example.com"))
+    resp = client.post("/submit", headers={"Origin": "https://example.com."})
+    assert resp.status_code == 403
