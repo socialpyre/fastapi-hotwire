@@ -8,10 +8,12 @@ from .deps import TurboContext, turbo_context
 from .flash import FlashMessage, flash, get_flashed
 from .protocols import BlockRenderer, SessionLike, TemplateRenderer
 from .responses import TurboStreamResponse
+from .templates import HotwireTemplates
 
 __all__ = [
     "BlockRenderer",
     "FlashMessage",
+    "HotwireTemplates",
     "Jinja2BlockRenderer",
     "SessionLike",
     "TemplateRenderer",
