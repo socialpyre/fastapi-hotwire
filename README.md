@@ -1,15 +1,11 @@
 # fastapi-hotwire
 
-Hotwire ([Turbo](https://turbo.hotwired.dev/)) integration for FastAPI — turbo-stream responses, frame detection, block rendering, flash messages, and pytest helpers.
+[![PyPI](https://img.shields.io/pypi/v/fastapi-hotwire?cacheSeconds=300)](https://pypi.org/project/fastapi-hotwire/)
+[![Python](https://img.shields.io/pypi/pyversions/fastapi-hotwire?cacheSeconds=300)](https://pypi.org/project/fastapi-hotwire/)
+[![CI](https://github.com/socialpyre/fastapi-hotwire/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/socialpyre/fastapi-hotwire/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/pypi/l/fastapi-hotwire?cacheSeconds=300)](LICENSE)
 
-[![PyPI version](https://img.shields.io/pypi/v/fastapi-hotwire.svg)](https://pypi.org/project/fastapi-hotwire/)
-[![Python versions](https://img.shields.io/pypi/pyversions/fastapi-hotwire.svg)](https://pypi.org/project/fastapi-hotwire/)
-[![CI](https://github.com/socialpyre/fastapi-hotwire/actions/workflows/ci.yml/badge.svg)](https://github.com/socialpyre/fastapi-hotwire/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-`fastapi-hotwire` is to FastAPI what [`turbo-flask`](https://github.com/miguelgrinberg/turbo-flask) is to Flask: a small, focused library for building server-rendered apps with Hotwire, without giving up FastAPI's async/dependency-injection story or pulling in a SPA framework.
-
-It's intentionally a thin layer. Each piece (responses, streams, templates, flash, csrf, forms, testing) is independently usable, and every integration seam — template engine, session backend — is behind a `Protocol` so you can swap it out.
+`fastapi-hotwire` brings [Hotwire's](https://hotwired.dev/) Turbo protocol to FastAPI. Render targeted DOM updates with `<turbo-stream>` responses, return individual Jinja blocks for `<turbo-frame>` requests, queue session-backed flash messages, and validate forms in place — all from your existing FastAPI handlers, with no JSON layer or client-side framework. Ships with pytest helpers and a `Protocol`-based design so you can swap template engines or session backends.
 
 ## Install
 
@@ -263,4 +259,4 @@ This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md) Code of Cond
 
 ## License
 
-[MIT](LICENSE) © 2026 Dane Thurber
+[MIT](LICENSE) © 2026 Pyre
