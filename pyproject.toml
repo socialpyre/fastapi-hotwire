@@ -76,3 +76,38 @@ python-version = "3.10"
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "--strict-markers"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+branch = "main"
+build_command = "uv build"
+commit_message = "chore(release): {version} [skip ci]"
+upload_to_pypi = false
+upload_to_release = true
+tag_format = "v{version}"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = [
+    "feat",
+    "fix",
+    "perf",
+    "docs",
+    "chore",
+    "ci",
+    "test",
+    "refactor",
+    "build",
+    "style",
+    "revert",
+]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "^chore\\(release\\):.*",
+]
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
