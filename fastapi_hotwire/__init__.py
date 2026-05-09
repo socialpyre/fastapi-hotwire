@@ -7,7 +7,7 @@ Public API:
 - :class:`TurboContext` + :func:`turbo_context` — request-shape dependency.
 - :class:`HotwireTemplates` — ``Jinja2Templates`` with block + stream helpers.
 - :func:`flash`, :func:`get_flashed`, :class:`FlashMessage` — session flash.
-- :mod:`forms` — form-token (HMAC time-trap) and validation-error stream.
+- :mod:`forms` — Pydantic validation-error → Turbo Stream helper.
 - :mod:`csrf` — origin-check dependency factory.
 - :mod:`testing` — pytest assertions and request helpers for Hotwire endpoints.
 

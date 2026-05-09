@@ -64,7 +64,7 @@ A complete runnable version of this example lives in [`examples/minimal/`](examp
 | [`TurboContext`](#turbocontext) | A FastAPI dependency that summarizes how the current request relates to Turbo (frame? stream? top-level visit?). |
 | [`HotwireTemplates`](#hotwiretemplates) | A `Jinja2Templates` wrapper that adds `render_block(...)` and `render_stream(...)`, plus an automatic `flashes` context processor. |
 | [`flash` / `get_flashed`](#flash) | Session-backed flash messages with both a redirect-style and a Hotwire-native turbo-stream flow. |
-| [`forms`](#forms) | An HMAC time-trap form token (anti-bot tripwire) and a Pydantic `ValidationError` → turbo-stream renderer. |
+| [`forms`](#forms) | A Pydantic `ValidationError` → turbo-stream renderer for in-place form validation. |
 | [`csrf`](#csrf) | An origin/referer-checking dependency factory with per-DNS-label wildcards. |
 | [`testing`](#testing) | pytest assertions and request helpers (`assert_turbo_stream`, `parse_streams`, `assert_turbo_frame`, `turbo_frame_request`, `turbo_stream_request`). |
 
@@ -165,14 +165,7 @@ A complete runnable example lives in [`examples/flash/`](examples/flash).
 ## forms
 
 ```python
-from fastapi_hotwire.forms import make_form_token, verify_form_token, validation_error_stream
-
-# In your form-render route, embed a fresh token:
-token = make_form_token(SECRET)
-
-# On submit, reject implausibly fast/stale submissions:
-if not verify_form_token(submitted_token, SECRET, min_age=3, max_age=3600):
-    raise HTTPException(403)
+from fastapi_hotwire.forms import validation_error_stream
 
 # Render Pydantic validation errors as a turbo-stream that replaces
 # only the form's block — no full-page reload, no scroll loss.
@@ -185,7 +178,7 @@ except ValidationError as exc:
     )
 ```
 
-The form token is an anti-bot tripwire, **not** a CSRF token. Pair it with `csrf.allowed_origin(...)` for state-changing endpoints. See the security note in the module docstring for what it is and isn't sized for.
+Pair with `csrf.allowed_origin(...)` for cross-origin protection on state-changing endpoints.
 
 ## csrf
 
