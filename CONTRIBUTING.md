@@ -20,6 +20,8 @@ uv tool install pre-commit
 pre-commit install
 ```
 
+If you prefer make targets, `make install` mirrors the bullets above and `make check` runs everything CI runs.
+
 ## What runs in CI
 
 - `uvx ruff check .` — lint (errors, unused imports, comprehension issues, modern-Python suggestions).

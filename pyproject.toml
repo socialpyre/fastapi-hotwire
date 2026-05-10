@@ -1,97 +1,96 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [ "hatchling" ]
+
 [project]
 name = "fastapi-hotwire"
 version = "0.1.0"
-description = "Hotwire (Turbo) integration for FastAPI — turbo-stream responses, frame detection, block rendering, flash, and test helpers."
+description = """\
+  Hotwire (Turbo) integration for FastAPI — turbo-stream responses, frame detection, block rendering, flash, and \
+  test helpers.\
+  """
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
-requires-python = ">=3.10"
-authors = [{ name = "Pyre" }]
 keywords = [
-    "fastapi",
-    "hotwire",
-    "turbo",
-    "stimulus",
-    "jinja2",
-    "html",
-    "server-rendered",
+  "fastapi",
+  "hotwire",
+  "html",
+  "jinja2",
+  "server-rendered",
+  "stimulus",
+  "turbo",
 ]
+license = "MIT"
+license-files = [ "LICENSE" ]
+authors = [
+  { name = "Dane Thurber", email = "dane.thurber@gmail.com" },
+  { name = "Pyre" },
+]
+requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Framework :: FastAPI",
-    "Intended Audience :: Developers",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Typing :: Typed",
+  "Development Status :: 4 - Beta",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
 ]
 dependencies = [
-    "fastapi>=0.136",
-    "jinja2>=3.1",
-    "markupsafe>=3.0",
+  "fastapi>=0.136",
+  "jinja2>=3.1",
+  "markupsafe>=3",
 ]
-
-[project.optional-dependencies]
-forms = ["pydantic>=2.13"]
+optional-dependencies.forms = [ "pydantic>=2.13" ]
+urls.Changelog = "https://github.com/socialpyre/fastapi-hotwire/blob/main/CHANGELOG.md"
+urls.Homepage = "https://github.com/socialpyre/fastapi-hotwire"
+urls.Issues = "https://github.com/socialpyre/fastapi-hotwire/issues"
+urls.Source = "https://github.com/socialpyre/fastapi-hotwire"
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0",
-    "pytest-asyncio>=1.3",
-    "pytest-sugar>=1.1",
-    "httpx>=0.28",
-    "itsdangerous>=2.2",
-    "pydantic>=2.13",
+  "httpx>=0.28",
+  "itsdangerous>=2.2",
+  "pydantic>=2.13",
+  "pytest>=9",
+  "pytest-asyncio>=1.3",
+  "pytest-sugar>=1.1",
 ]
 
-[project.urls]
-Homepage = "https://github.com/socialpyre/fastapi-hotwire"
-Source = "https://github.com/socialpyre/fastapi-hotwire"
-Issues = "https://github.com/socialpyre/fastapi-hotwire/issues"
-Changelog = "https://github.com/socialpyre/fastapi-hotwire/blob/main/CHANGELOG.md"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["fastapi_hotwire"]
+[tool.hatch]
+build.targets.wheel.packages = [ "fastapi_hotwire" ]
 
 [tool.ruff]
-line-length = 100
 target-version = "py310"
-
-[tool.ruff.lint]
-select = [
-    "B",        # flake8-bugbear
-    "C90",      # mccabe complexity
-    "E",        # pycodestyle errors
-    "F",        # pyflakes
-    "I",        # isort
-    "PLC0415",  # import-outside-top-level (no inline imports)
-    "RUF",      # ruff-specific (incl. RUF022 sorted __all__)
-    "SIM",      # flake8-simplify
-    "UP",       # pyupgrade
+line-length = 100
+lint.select = [
+  "B",       # flake8-bugbear
+  "C90",     # mccabe complexity
+  "E",       # pycodestyle errors
+  "F",       # pyflakes
+  "I",       # isort
+  "PLC0415", # import-outside-top-level (no inline imports)
+  "RUF",     # ruff-specific (incl. RUF022 sorted __all__)
+  "SIM",     # flake8-simplify
+  "UP",      # pyupgrade
 ]
+lint.mccabe.max-complexity = 10
 
-[tool.ruff.lint.mccabe]
-max-complexity = 10
+[tool.ty]
+environment.python-version = "3.10"
 
-[tool.ty.environment]
-python-version = "3.10"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-asyncio_mode = "auto"
-addopts = "--strict-markers"
+[tool.pytest]
+ini_options.testpaths = [ "tests" ]
+ini_options.asyncio_mode = "auto"
+ini_options.addopts = "--strict-markers"
 
 [tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
+version_toml = [ "pyproject.toml:project.version" ]
 branch = "main"
 build_command = "pip install build && python -m build"
 commit_message = "chore(release): {version} [skip ci]"
@@ -100,29 +99,23 @@ upload_to_release = true
 tag_format = "v{version}"
 major_on_zero = false
 allow_zero_version = true
-
-[tool.semantic_release.commit_parser_options]
-allowed_tags = [
-    "feat",
-    "fix",
-    "perf",
-    "docs",
-    "chore",
-    "ci",
-    "test",
-    "refactor",
-    "build",
-    "style",
-    "revert",
+branches.main.match = "main"
+branches.main.prerelease = false
+changelog.exclude_commit_patterns = [
+  "^chore\\(release\\):.*",
 ]
-minor_tags = ["feat"]
-patch_tags = ["fix", "perf"]
-
-[tool.semantic_release.changelog]
-exclude_commit_patterns = [
-    "^chore\\(release\\):.*",
+commit_parser_options.allowed_tags = [
+  "feat",
+  "fix",
+  "perf",
+  "docs",
+  "chore",
+  "ci",
+  "test",
+  "refactor",
+  "build",
+  "style",
+  "revert",
 ]
-
-[tool.semantic_release.branches.main]
-match = "main"
-prerelease = false
+commit_parser_options.minor_tags = [ "feat" ]
+commit_parser_options.patch_tags = [ "fix", "perf" ]
