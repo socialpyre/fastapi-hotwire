@@ -13,7 +13,13 @@ permissions:
   contents: read
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
   release:
+    needs: ci
     name: semantic-release
     runs-on: ubuntu-latest
     permissions:
@@ -37,6 +43,7 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
+          version: "0.11.12"
 
       - name: Set up Python
         run: uv python install 3.12
