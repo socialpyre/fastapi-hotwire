@@ -6,6 +6,39 @@ This project adheres to [Semantic Versioning](https://semver.org/) and uses [Con
 
 <!-- version list -->
 
+## v0.3.0 (2026-05-15)
+
+### Chores
+
+- Sync uv.lock to v0.2.0 + normalize specifiers
+  ([`598b34d`](https://github.com/socialpyre/fastapi-hotwire/commit/598b34d309f40dceb020279f8ff8c4b0a1e19938))
+
+### Continuous Integration
+
+- Backport postpit's release-gate + tooling baseline
+  ([`4239e50`](https://github.com/socialpyre/fastapi-hotwire/commit/4239e502ccdc2848150caada2863f272e2709834))
+
+- Empty commit to retrigger workflow
+  ([`19d565a`](https://github.com/socialpyre/fastapi-hotwire/commit/19d565a05c0e7c8704edd9caf561af61fd17165d))
+
+- Lowercase workflow name in dependency-review.yml
+  ([`dc7d69f`](https://github.com/socialpyre/fastapi-hotwire/commit/dc7d69fa028afda04afd1e55b651d241bff7c1df))
+
+- Lowercase workflow names for consistency
+  ([`738819d`](https://github.com/socialpyre/fastapi-hotwire/commit/738819d61297ae27c0a55ea6912835da4df9ae11))
+
+### Features
+
+- Drop csrf module
+  ([`477df8b`](https://github.com/socialpyre/fastapi-hotwire/commit/477df8b6d901a180d85565913ace4bc71ec5bdc1))
+
+### Breaking Changes
+
+- `fastapi_hotwire.csrf` and `csrf.allowed_origin` are removed. Replace with `fastapi-csrf-protect`,
+  `asgi-csrf`, or a small in-app Origin/Referer check. The removed module was ~50 LOC; see the prior
+  commit on the v0.2.0 tag for a starting point if you want to copy it.
+
+
 ## v0.2.0 (2026-05-09)
 
 ### Documentation
