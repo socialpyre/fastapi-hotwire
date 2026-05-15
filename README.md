@@ -65,7 +65,6 @@ A complete runnable version of this example lives in [`examples/minimal/`](examp
 | [`HotwireTemplates`](#hotwiretemplates) | A `Jinja2Templates` wrapper that adds `render_block(...)` and `render_stream(...)`, plus an automatic `flashes` context processor. |
 | [`flash` / `get_flashed`](#flash) | Session-backed flash messages with both a redirect-style and a Hotwire-native turbo-stream flow. |
 | [`forms`](#forms) | A Pydantic `ValidationError` → turbo-stream renderer for in-place form validation. |
-| [`csrf`](#csrf) | An origin/referer-checking dependency factory with per-DNS-label wildcards. |
 | [`testing`](#testing) | pytest assertions and request helpers (`assert_turbo_stream`, `parse_streams`, `assert_turbo_frame`, `turbo_frame_request`, `turbo_stream_request`). |
 
 ## TurboStreamResponse
@@ -177,26 +176,6 @@ except ValidationError as exc:
         block="form", target="contact-form", request=request,
     )
 ```
-
-Pair with `csrf.allowed_origin(...)` for cross-origin protection on state-changing endpoints.
-
-## csrf
-
-```python
-from fastapi import Depends
-from fastapi_hotwire import csrf
-
-@router.post(
-    "/contact",
-    dependencies=[Depends(csrf.allowed_origin(
-        "https://example.com",
-        "https://*.example.com",   # one DNS label wildcard
-    ))],
-)
-async def contact(...): ...
-```
-
-Wildcards consume exactly one DNS label, so `https://*.cloudfront.net` matches `https://dXXX.cloudfront.net` but not `https://evil.dXXX.cloudfront.net`. Origin is checked first, then `Referer` as a fallback.
 
 ## testing
 

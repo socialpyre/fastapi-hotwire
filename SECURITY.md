@@ -26,7 +26,6 @@ Only the **latest released version** is supported. Older versions will not recei
 The package ships a few primitives where security expectations are explicit and bugs are most consequential:
 
 - **`fastapi_hotwire.streams`** — the trust contract for the `html` argument (raw, un-escaped) and the attribute-escaping path for `target` / `targets` / `request_id`.
-- **`fastapi_hotwire.csrf`** — the `Origin` / `Referer` validator and per-DNS-label wildcard semantics.
 - **`fastapi_hotwire.templates.HotwireTemplates`** — the autoescape assertion at construction time.
 - **`fastapi_hotwire.flash`** — flash content rides in a signed-but-not-encrypted session cookie; the doc strings call out what is and isn't safe to put there.
 

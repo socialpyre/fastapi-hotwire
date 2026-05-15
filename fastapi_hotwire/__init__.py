@@ -8,7 +8,6 @@ Public API:
 - :class:`HotwireTemplates` — ``Jinja2Templates`` with block + stream helpers.
 - :func:`flash`, :func:`get_flashed`, :class:`FlashMessage` — session flash.
 - :mod:`forms` — Pydantic validation-error → Turbo Stream helper.
-- :mod:`csrf` — origin-check dependency factory.
 - :mod:`testing` — pytest assertions and request helpers for Hotwire endpoints.
 
 See https://github.com/socialpyre/fastapi-hotwire for the quickstart.
@@ -16,7 +15,7 @@ See https://github.com/socialpyre/fastapi-hotwire for the quickstart.
 
 from __future__ import annotations
 
-from . import csrf, forms, streams, testing
+from . import forms, streams, testing
 from .blocks import BlockRenderer, Jinja2BlockRenderer
 from .deps import TurboContext, turbo_context
 from .flash import FlashMessage, flash, get_flashed
@@ -33,7 +32,6 @@ __all__ = [
     "TemplateRenderer",
     "TurboContext",
     "TurboStreamResponse",
-    "csrf",
     "flash",
     "forms",
     "get_flashed",
